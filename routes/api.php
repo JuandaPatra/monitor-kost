@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\homecontroller;
 use App\Http\Controllers\LeadsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::middleware(['api'])->group(function () {
-    Route::apiResource('/leads', LeadsController::class);
+    Route::apiResource('/leads', 
+    LeadsController::class);
+
+    Route::apiResource('/home', homecontroller::class);
 });
 

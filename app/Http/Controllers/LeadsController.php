@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Leads;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LeadsController extends Controller
 {
@@ -13,19 +14,45 @@ class LeadsController extends Controller
     public function index(Request $request)
     {
 
-        $sortBy = $request->get('sortBy', 'created_at'); // Default sorting by 'created_at'
+        $sortBy = $request->get('sortBy', 'leads.created_at'); // Default sorting by 'created_at'
         $sortOrder = $request->get('sortOrder', 'desc'); // Default order 'desc'
-        $keyword = $request->get('keyword', null); // Default no keyword
+        $keyword = $request->get('q', null); // Default no keyword
         $perPage = $request->input('per_page', 10);
+        $startDate = $request->get('start_date', null); // Start date for filtering
+        $endDate = $request->get('end_date', null); // End date for filtering
         // Build the query
         $leads = Leads::query();
+        $leads->leftJoin('properties', 'leads.property_id', '=', 'properties.id')->select(
+            'leads.*',
+            'properties.name as property_name',
+            DB::raw("
+        CASE 
+          WHEN leads.status = 0 THEN 'menghubungi pemilik'
+          WHEN leads.status = 1 THEN 'menyewa kos'
+          WHEN leads.status = 2 THEN 'Tidak jadi menyewa'
+          WHEN leads.status = 3 THEN 'Tidak memberi feedback'
+          ELSE 'Unknown'
+        END as status
+      "),
+            DB::raw("DATE_FORMAT(leads.created_at, '%d-%m-%Y') as date")
+        );
+
+
 
         // Apply keyword search (searching by name or email)
         if ($keyword) {
             $leads->where(function ($query) use ($keyword) {
-                $query->where('name', 'like', "%{$keyword}%")
-                      ->orWhere('email', 'like', "%{$keyword}%");
+                $query->where('leads.name', 'like', "%{$keyword}%")
+                    ->orWhere('leads.email', 'like', "%{$keyword}%");
             });
+        }
+
+        if ($startDate && $endDate) {
+            $leads->whereBetween('leads.created_at', [$startDate, $endDate]);
+        } elseif ($startDate) {
+            $leads->whereDate('leads.created_at', '>=', $startDate);
+        } elseif ($endDate) {
+            $leads->whereDate('leads.created_at', '<=', $endDate);
         }
 
         // Apply sorting
@@ -45,7 +72,7 @@ class LeadsController extends Controller
     public function store(Request $request)
     {
 
-        try{
+        try {
 
             $validated = $request->validate([
                 'property_id'   => 'required',
@@ -54,24 +81,22 @@ class LeadsController extends Controller
                 'phone' => 'required|string|max:15',
                 'status' => 'required',
             ]);
-    
+
             // Simpan data leads ke database
             $lead = Leads::create($validated);
-    
+
             // Kembalikan respons
             return response()->json([
                 'status' => 'success',
                 'message' => 'Lead stored successfully.',
                 'data' => $lead,
-            ], 201);
-
-        }catch (\Exception $e) {
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }
-        
     }
 
     /**
@@ -87,7 +112,36 @@ class LeadsController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $lead = Leads::where('id', $id)->first();
+
+        try{
+
+            $validated = $request->validate([
+                'status' => 'required',
+            ]);
+    
+            $lead->update($validated);
+            if (!$lead) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Lead not found.',
+                ], 404);
+                
+            }
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Lead updated successfully.',
+                'data' => $lead,
+            ], 200);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+
     }
 
     /**
