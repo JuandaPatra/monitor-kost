@@ -34,6 +34,8 @@ class LeadsController extends Controller
           ELSE 'Unknown'
         END as status
       "),
+      'leads.status as status_id',
+
             DB::raw("DATE_FORMAT(leads.created_at, '%d-%m-%Y') as date")
         );
 
