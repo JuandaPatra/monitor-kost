@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Export\DataExport;
 use App\Http\Controllers\API\ExportDataController;
+use App\Http\Controllers\API\KostContoller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -40,6 +41,8 @@ Route::middleware(['api'])->group(function () {
     
         return Excel::download(new DataExport($startDate, $endDate), 'data'. $startDate .'-'.$request->input('end_date').'.xlsx');
     });
+    
+    Route::apiResource('/kost', KostContoller::class);
 
 });
 
