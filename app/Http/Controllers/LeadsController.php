@@ -24,7 +24,7 @@ class LeadsController extends Controller
         $leads = Leads::query();
         $leads->leftJoin('properties', 'leads.property_id', '=', 'properties.id')->select(
             'leads.*',
-            'properties.name as property_name',
+            DB::raw("COALESCE(properties.name, 'Tanpa Properti') as property_name"),
             DB::raw("
         CASE 
           WHEN leads.status = 0 THEN 'menghubungi pemilik'
@@ -34,7 +34,7 @@ class LeadsController extends Controller
           ELSE 'Unknown'
         END as status
       "),
-      'leads.status as status_id',
+            'leads.status as status_id',
 
             DB::raw("DATE_FORMAT(leads.created_at, '%d-%m-%Y') as date")
         );
@@ -116,34 +116,31 @@ class LeadsController extends Controller
     {
         $lead = Leads::where('id', $id)->first();
 
-        try{
+        try {
 
             $validated = $request->validate([
                 'status' => 'required',
             ]);
-    
+
             $lead->update($validated);
             if (!$lead) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Lead not found.',
                 ], 404);
-                
             }
-    
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Lead updated successfully.',
                 'data' => $lead,
             ], 200);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }
-
     }
 
     /**
