@@ -42,6 +42,7 @@ Route::middleware(['api'])->group(function () {
         return Excel::download(new DataExport($startDate, $endDate), 'data'. $startDate .'-'.$request->input('end_date').'.xlsx');
     });
     
+    Route::get('/kost/list', [KostContoller::class, 'ListKost']);
     Route::apiResource('/kost', KostContoller::class);
 
 });
