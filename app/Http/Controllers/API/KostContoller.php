@@ -151,4 +151,14 @@ class KostContoller extends Controller
             ], 500);
         }
     }
+
+    public function ListKost(Request $request)
+    {
+        $properties = Properties::select('id', 'name')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $properties
+        ],200);
+    }
 }
