@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Export\DataExport;
 use App\Http\Controllers\API\ExportDataController;
 use App\Http\Controllers\API\KostContoller;
+use App\Http\Controllers\API\RoomController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -44,6 +45,8 @@ Route::middleware(['api'])->group(function () {
     
     Route::get('/kost/list', [KostContoller::class, 'ListKost']);
     Route::apiResource('/kost', KostContoller::class);
+
+    Route::apiResource('/room', RoomController::class);
 
 });
 
