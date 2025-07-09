@@ -10,6 +10,7 @@ use App\Export\DataExport;
 use App\Http\Controllers\API\ExportDataController;
 use App\Http\Controllers\API\KostContoller;
 use App\Http\Controllers\API\RoomController;
+use App\Http\Controllers\AuthController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -24,14 +25,21 @@ use Illuminate\Support\Facades\Log;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::post('/register', [AuthController::class, 'register']);
 
 
+
+// Route::middleware(['auth:api'])->get('/user', function (Request $request) {
+//     return response()->json($request->user());
+// });
+
+Route::post('/login', [AuthController::class, 'login']);
 Route::middleware(['api'])->group(function () {
-    Route::apiResource('/leads', 
-    LeadsController::class);
+
+    Route::apiResource(
+        '/leads',
+        LeadsController::class
+    );
 
     Route::apiResource('/home', homecontroller::class);
     Route::apiResource('/statistics', StatisticController::class);
@@ -39,16 +47,27 @@ Route::middleware(['api'])->group(function () {
     Route::get('/export-excel', function (Request $request) {
         $startDate = Carbon::parse($request->input('start_date'))->toDateTimeString();
         $endDate = Carbon::parse($request->input('end_date'))->toDateTimeString();
-    
-        return Excel::download(new DataExport($startDate, $endDate), 'data'. $startDate .'-'.$request->input('end_date').'.xlsx');
+
+        return Excel::download(new DataExport($startDate, $endDate), 'data' . $startDate . '-' . $request->input('end_date') . '.xlsx');
     });
-    
+
     Route::get('/kost/list', [KostContoller::class, 'ListKost']);
     Route::apiResource('/kost', KostContoller::class);
 
     Route::apiResource('/room', RoomController::class);
 
+    Route::get('/apakek', function () {
+        return response()->json(['message' => 'tes']);
+    });
 });
 
 
-
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', function (Request $request) {
+        return response()->json($request->user());
+    });
+});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return response()->json($request->user()) ;
+// });

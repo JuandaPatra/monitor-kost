@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Properties;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Row;
@@ -14,13 +15,20 @@ class RoomController extends Controller
      */
     public function index(Request $request)
     {
+
+        $keyword = $request->get('q', null); // Default no keyword
+        $perPage = $request->input('per_page', 10);
+
         $id = $request->get('id');
-        $listsKamar = Room::where('properties_id', '=', $id)->get();
+
+        $listsKamar = Room::query();
+        
+        $listsKamar->where('properties_id', '=', $id);
 
 
         return response()->json([
             'status' => 'success',
-            'data'   => $listsKamar
+            'data'   => $listsKamar->paginate(3),
         ],200);
     }
 
